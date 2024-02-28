@@ -15,6 +15,8 @@ import { ButtonAction, ButtonSize } from '@/constants/buttons';
 import { DropdownMenu, DropdownMenuProps } from '@/components/DropdownMenu';
 import { Checkbox } from '@/components/Checkbox';
 import styled, { AnyStyledComponent } from 'styled-components';
+import { track } from '@/lib/analytics';
+import { AnalyticsEvent } from '@/constants/analytics';
 
 export const ExportHistoryDropdown = (props: DropdownMenuProps<string>) => {
   const { items = [], ...rest } = props;
@@ -184,11 +186,18 @@ export const ExportHistoryDropdown = (props: DropdownMenuProps<string>) => {
     if (checkedTransfers) {
       exportTransfers();
     }
+
+    track(AnalyticsEvent.ExportDownloadClick, { trades: checkedTrades, transfers: checkedTransfers })
   }, [checkedTrades, checkedTransfers, exportTrades, exportTransfers]);
 
   return (
     <DropdownMenu
       {...rest}
+      onOpenChange={(open) => {
+        if (open) {
+          track(AnalyticsEvent.ExportButtonClick);
+        }
+      }}
       items={[
         ...items,
         {
@@ -197,7 +206,11 @@ export const ExportHistoryDropdown = (props: DropdownMenuProps<string>) => {
               disabled={trades.length === 0}
               label={stringGetter({ key: STRING_KEYS.TRADES })}
               checked={checkedTrades}
-              onCheckedChange={() => setCheckedTrades(!checkedTrades)}
+              onCheckedChange={() => {
+                setCheckedTrades(!checkedTrades);
+
+                track(AnalyticsEvent.ExportTradesCheckboxClick, { value: !checkedTrades });
+              }}
             />
           ),
           value: 'trades',
@@ -209,7 +222,11 @@ export const ExportHistoryDropdown = (props: DropdownMenuProps<string>) => {
               disabled={transfers.length === 0}
               label={stringGetter({ key: STRING_KEYS.TRANSFERS })}
               checked={checkedTransfers}
-              onCheckedChange={() => setCheckedTransfers(!checkedTransfers)}
+              onCheckedChange={() => {
+                setCheckedTransfers(!checkedTransfers);
+
+                track(AnalyticsEvent.ExportTransfersCheckboxClick, { value: !checkedTrades });
+              }}
             />
           ),
           value: 'transfers',
