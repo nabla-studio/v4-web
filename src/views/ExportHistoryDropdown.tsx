@@ -218,7 +218,11 @@ export const ExportHistoryDropdown = (props: DropdownMenuProps<string>) => {
         {
           label: (
             <Styled.Button
-              state={{ isDisabled: !checkedTrades && !checkedTransfers }}
+              state={{
+                isDisabled:
+                  (!checkedTrades && !checkedTransfers) ||
+                  (transfers.length === 0 && trades.length === 0),
+              }}
               action={ButtonAction.Primary}
               size={ButtonSize.XSmall}
               onClick={exportData}
