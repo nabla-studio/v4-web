@@ -11,7 +11,7 @@ export type DropdownMenuItem<T> = {
   value: T;
   icon?: React.ReactNode;
   label: React.ReactNode;
-  onSelect?: () => void;
+  onSelect?: (e: Event) => void;
   separator?: boolean;
   highlightColor?: 'accent' | 'create' | 'destroy';
 };
@@ -29,7 +29,7 @@ type ElementProps<T> = {
   slotTopContent?: React.ReactNode;
 };
 
-type DropdownMenuProps<T> = StyleProps & ElementProps<T>;
+export type DropdownMenuProps<T> = StyleProps & ElementProps<T>;
 
 export const DropdownMenu = forwardRef(
   <T extends string>(
