@@ -1,6 +1,14 @@
 import { Fragment, type Ref } from 'react';
 
-import { Content, Item, Portal, Root, Separator, Trigger } from '@radix-ui/react-dropdown-menu';
+import {
+  Content,
+  Item,
+  Portal,
+  Root,
+  Separator,
+  Trigger,
+  type DropdownMenuProps as RadixDropdownMenuProps,
+} from '@radix-ui/react-dropdown-menu';
 import styled from 'styled-components';
 
 import { popoverMixins } from '@/styles/popoverMixins';
@@ -13,7 +21,7 @@ export type DropdownMenuItem<T> = {
   value: T;
   icon?: React.ReactNode;
   label: React.ReactNode;
-  onSelect?: () => void;
+  onSelect?: (e: Event) => void;
   separator?: boolean;
   highlightColor?: 'accent' | 'create' | 'destroy';
 };
@@ -31,7 +39,7 @@ type ElementProps<T> = {
   slotTopContent?: React.ReactNode;
 };
 
-type DropdownMenuProps<T> = StyleProps & ElementProps<T>;
+export type DropdownMenuProps<T> = StyleProps & ElementProps<T> & RadixDropdownMenuProps;
 
 export const DropdownMenu = forwardRefFn(
   <T extends string>(
@@ -43,11 +51,12 @@ export const DropdownMenu = forwardRefFn(
       slotTopContent,
       side = 'bottom',
       sideOffset = 8,
+      ...rest
     }: DropdownMenuProps<T>,
     ref: Ref<HTMLButtonElement>
   ) => {
     return (
-      <Root>
+      <Root {...rest}>
         <$Trigger ref={ref} className={className}>
           {children}
           <$DropdownIcon aria-hidden="true">
