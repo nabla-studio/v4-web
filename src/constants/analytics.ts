@@ -117,6 +117,12 @@ export enum AnalyticsEvent {
   TradeCancelOrder = 'TradeCancelOrder',
   TradeCancelOrderConfirmed = 'TradeCancelOrderConfirmed',
 
+  // Export CSV
+  ExportButtonClick = 'ExportCSVClick',
+  ExportTradesCheckboxClick = 'ExportTradesCheckboxClick',
+  ExportTransfersCheckboxClick = 'ExportTransfersCheckboxClick',
+  ExportDownloadClick = 'ExportDownloadClick',
+
   // Notification
   NotificationAction = 'NotificationAction',
 }
@@ -250,7 +256,20 @@ export type AnalyticsEventData<T extends AnalyticsEvent> =
                                                 status: 'new' | 'success' | 'error';
                                                 triggeredAt: number | undefined;
                                               }
-                                            : never;
+                                            : T extends AnalyticsEvent.ExportDownloadClick
+                                              ? {
+                                                  trades: boolean;
+                                                  transfers: boolean;
+                                                }
+                                              : T extends AnalyticsEvent.ExportTradesCheckboxClick
+                                                ? {
+                                                    value: boolean;
+                                                  }
+                                                : T extends AnalyticsEvent.ExportTransfersCheckboxClick
+                                                  ? {
+                                                      value: boolean;
+                                                    }
+                                                  : never;
 
 export const DEFAULT_TRANSACTION_MEMO = 'dYdX Frontend (web)';
 export const lastSuccessfulRestRequestByOrigin: Record<URL['origin'], number> = {};

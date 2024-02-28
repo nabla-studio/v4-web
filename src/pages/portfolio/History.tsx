@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { AnyStyledComponent } from 'styled-components';
 
 import { STRING_KEYS } from '@/constants/localization';
 import { HistoryRoute } from '@/constants/routes';
@@ -11,6 +11,7 @@ import { layoutMixins } from '@/styles/layoutMixins';
 
 import { AttachedExpandingSection } from '@/components/ContentSection';
 import { NavigationMenu } from '@/components/NavigationMenu';
+import { ExportHistoryDropdown } from '@/views/ExportHistoryDropdown';
 
 export const History = () => {
   const stringGetter = useStringGetter();
@@ -21,6 +22,7 @@ export const History = () => {
       {isNotTablet && (
         <$NavigationMenu
           orientation="horizontal"
+          slotAfter={<Styled.ExportButton />}
           items={[
             {
               group: 'navigation',
@@ -52,6 +54,13 @@ export const History = () => {
     </AttachedExpandingSection>
   );
 };
+
+const Styled: Record<string, AnyStyledComponent> = {};
+
+Styled.ExportButton = styled(ExportHistoryDropdown)`
+  margin-left: auto;
+`;
+
 const $NavigationMenu = styled(NavigationMenu)`
   --header-horizontal-padding: 1rem;
 
