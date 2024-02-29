@@ -242,7 +242,6 @@ export const ExportHistoryDropdown = (props: DropdownMenuProps<string>) => {
               }}
               action={ButtonAction.Primary}
               size={ButtonSize.XSmall}
-              onClick={exportData}
             >
               {stringGetter({ key: STRING_KEYS.DOWNLOAD })}
             </Styled.Button>
