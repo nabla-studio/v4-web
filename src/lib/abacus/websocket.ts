@@ -27,7 +27,10 @@ class AbacusWebsocket implements Omit<AbacusWebsocketProtocol, '__doNotUseOrImpl
 
   private pingPongTimer?: NodeJS.Timer;
   private disconnectTimer?: NodeJS.Timer;
+  private reconnectTimer?: NodeJS.Timer;
   private currentCandleId: string | undefined;
+
+  private isConnecting: boolean = false;
 
   connect(url: string, connected: (p0: boolean) => void, received: (p0: string) => void): void {
     this.url = url;
@@ -85,9 +88,16 @@ class AbacusWebsocket implements Omit<AbacusWebsocketProtocol, '__doNotUseOrImpl
 
   private _initializeSocket = (): void => {
     if (!this.url || !this.connectedCallback || !this.receivedCallback) return;
+    if ((this.socket && this.socket.readyState === WebSocket.OPEN) || this.isConnecting) {
+      return;
+    }
+
+    this.isConnecting = true;
+
     this.socket = new WebSocket(this.url);
 
     this.socket.onopen = () => {
+      this.isConnecting = false;
       if (this.socket?.readyState === WebSocket.OPEN) {
         this.pingPongTimer = setInterval(() => {
           if (this.socket && this.socket.readyState === WebSocket.OPEN) {
@@ -179,12 +189,14 @@ class AbacusWebsocket implements Omit<AbacusWebsocketProtocol, '__doNotUseOrImpl
     };
 
     this.socket.onclose = (e) => {
+      this.isConnecting = false;
       this.connectedCallback?.(false);
       if (!isDev) return;
       console.warn('AbacusStateManager > WS > close > ', e);
     };
 
     this.socket.onerror = (e) => {
+      this.isConnecting = false;
       this.connectedCallback?.(false);
       if (!isDev) return;
       console.error('AbacusStateManager > WS > error > ', e);
@@ -206,7 +218,9 @@ class AbacusWebsocket implements Omit<AbacusWebsocketProtocol, '__doNotUseOrImpl
   };
 
   private _setReconnectInterval = () => {
-    setInterval(() => {
+    if (this.reconnectTimer !== null) clearInterval(this.reconnectTimer);
+
+    this.reconnectTimer = setInterval(() => {
       if (
         !this.socket ||
         this.socket.readyState === WebSocket.CLOSED ||
