@@ -87,6 +87,36 @@ Set environment variables via `.env`.
 - `STATUS_PAGE_SCRIPT_URI` (optional): Used for enabling the status page; used with `pnpm run build:inject-statuspage`.
 - `SMARTBANNER_APP_NAME`, `SMARTBANNER_ORG_NAME`, `SMARTBANNER_ICON_URL`, `SMARTBANNER_APPSTORE_URL` (optional): Used for enabling the smart app banner; used with `pnpm run build:inject-smartbanner`.
 
+# Local Abacus Development
+
+## Directory structure
+
+Our tooling assumes that the [v4-abacus repo](https://github.com/dydxprotocol/v4-abacus) is checked out alongside v4-web:
+```
+--- parent folder
+ |___ v4-web
+ |___ v4-abacus
+```
+
+## Using your local v4-abacus repo
+
+Whenever you have changes in v4-abacus that you'd like to test in your local v4-web branch, use the following command:
+```
+pnpm run install-local-abacus --clean
+```
+The `--clean` option will do some extra cleaning, **it is not needed on subsequent runs.**
+
+## Reverting to remote abacus
+
+Revert any changes to @dydxprotocol/v4-abacus in package.json and pnpm-lock.yaml. If you haven't made any other package changes, you can use:
+```
+git restore main package.json
+git restore main pnpm-lock.yaml
+```
+Then run `pnpm install`
+
+**Remember to revert to remote abacus before making a PR.**
+
 # Deployments
 
 ## Deploying with Vercel
