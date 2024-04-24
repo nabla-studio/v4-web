@@ -36,6 +36,7 @@ import { AlertMessage } from '@/components/AlertMessage';
 import { Button } from '@/components/Button';
 import { FormInput } from '@/components/FormInput';
 import { Icon, IconName } from '@/components/Icon';
+import { IconButton } from '@/components/IconButton';
 import { InputType } from '@/components/Input';
 import { Tag } from '@/components/Tag';
 import { ToggleButton } from '@/components/ToggleButton';
@@ -163,6 +164,10 @@ export const TradeForm = ({
     alertContent = inputAlert?.alertString;
     alertType = inputAlert?.type;
   }
+
+  const shouldPromptUserToPlaceLimitOrder = ['MARKET_ORDER_ERROR_ORDERBOOK_SLIPPAGE'].some(
+    (errorCode) => inputAlert?.code === errorCode
+  );
 
   const orderSideAction = {
     [OrderSide.BUY]: ButtonAction.Create,
@@ -325,7 +330,22 @@ export const TradeForm = ({
 
               {needsAdvancedOptions && <AdvancedTradeOptions />}
 
-              {alertContent && <AlertMessage type={alertType}>{alertContent}</AlertMessage>}
+              {alertContent && (
+                <AlertMessage type={alertType}>
+                  <Styled.Message>
+                    {alertContent}
+                    {shouldPromptUserToPlaceLimitOrder && (
+                      <Styled.IconButton
+                        iconName={IconName.Arrow}
+                        shape={ButtonShape.Circle}
+                        action={ButtonAction.Navigation}
+                        size={ButtonSize.XSmall}
+                        onClick={() => onTradeTypeChange(TradeTypes.LIMIT)}
+                      />
+                    )}
+                  </Styled.Message>
+                </AlertMessage>
+              )}
             </Styled.InputsColumn>
           </Styled.OrderbookAndInputs>
         </>
@@ -487,6 +507,21 @@ Styled.Orderbook = styled(Orderbook)`
 
 Styled.InputsColumn = styled.div`
   ${formMixins.inputsColumn}
+`;
+
+Styled.Message = styled.div`
+  ${layoutMixins.row}
+  gap: 0.75rem;
+`;
+
+Styled.IconButton = styled(IconButton)`
+  --button-backgroundColor: var(--color-white-faded);
+  flex-shrink: 0;
+
+  svg {
+    width: 1.25em;
+    height: 1.25em;
+  }
 `;
 
 Styled.ButtonRow = styled.div`
