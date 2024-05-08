@@ -35,6 +35,10 @@ class TestFlags {
   get showTradingRewards() {
     return !!this.queryParams.tradingrewards;
   }
+
+  get referrer() {
+    return this.queryParams.utm_source;
+  }
 }
 
 export const testFlags = new TestFlags();

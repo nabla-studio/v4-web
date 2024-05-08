@@ -176,8 +176,8 @@ export const useAnalytics = () => {
     }
   }, [onboardingState, currentOnboardingStep]);
 
-  // AnalyticsEvent.OnboardingConnectWallet
-  // AnalyticsEvent.OnboardingDisconnectWallet
+  // AnalyticsEvent.ConnectWallet
+  // AnalyticsEvent.DisconnectWallet
   const [previousSelectedWalletType, setPreviousSelectedWalletType] =
     useState<typeof selectedWalletType>();
 
