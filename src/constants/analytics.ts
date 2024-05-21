@@ -1,16 +1,18 @@
+import type { AbacusApiStatus, HumanReadablePlaceOrderPayload } from './abacus';
+import type { OnboardingState, OnboardingSteps } from './account';
+import type { DialogTypes } from './dialogs';
 import type { SupportedLocales } from './localization';
 import type { DydxNetwork } from './networks';
-import type { OnboardingState, OnboardingSteps } from './account';
-import type { DydxAddress, WalletType, WalletConnectionType, EvmAddress } from './wallets';
-import type { DialogTypes } from './dialogs';
+import { TransferNotificationTypes } from './notifications';
 import type { TradeTypes } from './trade';
-import type { AbacusApiStatus, HumanReadablePlaceOrderPayload } from './abacus';
+import type { DydxAddress, EvmAddress, WalletConnectionType, WalletType } from './wallets';
 
 // User properties
 export enum AnalyticsUserProperty {
   // Environment
   Locale = 'selectedLocale',
   Breakpoint = 'breakpoint',
+  Version = 'version',
 
   // Network
   Network = 'network',
@@ -31,6 +33,8 @@ export type AnalyticsUserPropertyValue<T extends AnalyticsUserProperty> =
     ? 'MOBILE' | 'TABLET' | 'DESKTOP_SMALL' | 'DESKTOP_MEDIUM' | 'DESKTOP_LARGE' | 'UNSUPPORTED'
     : T extends AnalyticsUserProperty.Locale
     ? SupportedLocales
+    : T extends AnalyticsUserProperty.Version
+    ? string | undefined
     : // Network
     T extends AnalyticsUserProperty.Network
     ? DydxNetwork
@@ -74,6 +78,7 @@ export enum AnalyticsEvent {
   TransferFaucetConfirmed = 'TransferFaucetConfirmed',
   TransferDeposit = 'TransferDeposit',
   TransferWithdraw = 'TransferWithdraw',
+  TransferNotification = 'TransferNotification',
 
   // Trading
   TradeOrderTypeSelected = 'TradeOrderTypeSelected',
@@ -157,12 +162,26 @@ export type AnalyticsEventData<T extends AnalyticsEvent> =
         chainId?: string;
         tokenAddress?: string;
         tokenSymbol?: string;
+        slippage?: number;
+        gasFee?: number;
+        bridgeFee?: number;
+        exchangeRate?: number;
+        estimatedRouteDuration?: number;
+        toAmount?: number;
+        toAmountMin?: number;
       }
     : T extends AnalyticsEvent.TransferWithdraw
     ? {
         chainId?: string;
         tokenAddress?: string;
         tokenSymbol?: string;
+        slippage?: number;
+        gasFee?: number;
+        bridgeFee?: number;
+        exchangeRate?: number;
+        estimatedRouteDuration?: number;
+        toAmount?: number;
+        toAmountMin?: number;
       }
     : // Trading
     T extends AnalyticsEvent.TradeOrderTypeSelected
@@ -208,6 +227,17 @@ export type AnalyticsEventData<T extends AnalyticsEvent> =
     ? {
         value: boolean;
       }
+    : T extends AnalyticsEvent.TransferNotification
+    ? {
+        type: TransferNotificationTypes | undefined;
+        toAmount: number | undefined;
+        timeSpent: Record<string, number> | number | undefined;
+        txHash: string;
+        status: 'new' | 'success' | 'error';
+        triggeredAt: number | undefined;
+      }
     : never;
 
 export const DEFAULT_TRANSACTION_MEMO = 'dYdX Frontend (web)';
+export const lastSuccessfulRestRequestByOrigin: Record<URL['origin'], number> = {};
+export const lastSuccessfulWebsocketRequestByOrigin: Record<URL['origin'], number> = {};
