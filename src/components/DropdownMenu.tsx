@@ -1,7 +1,15 @@
 import { Fragment, type Ref } from 'react';
 
-import { Content, Item, Portal, Root, Separator, Trigger, type DropdownMenuProps as RadixDropdownMenuProps } from '@radix-ui/react-dropdown-menu';
-import styled, { type AnyStyledComponent } from 'styled-components';
+import {
+  Content,
+  Item,
+  Portal,
+  Root,
+  Separator,
+  Trigger,
+  type DropdownMenuProps as RadixDropdownMenuProps,
+} from '@radix-ui/react-dropdown-menu';
+import styled from 'styled-components';
 
 import { popoverMixins } from '@/styles/popoverMixins';
 
@@ -48,8 +56,8 @@ export const DropdownMenu = forwardRefFn(
     ref: Ref<HTMLButtonElement>
   ) => {
     return (
-      <Root ref={ref} className={className} {...rest}>
-        <Styled.Trigger ref={ref} className={className}>
+      <Root {...rest}>
+        <$Trigger ref={ref} className={className}>
           {children}
           <$DropdownIcon aria-hidden="true">
             <Icon iconName={IconName.Triangle} aria-hidden="true" />
@@ -77,6 +85,7 @@ export const DropdownMenu = forwardRefFn(
     );
   }
 );
+
 const $Separator = styled(Separator)`
   border-bottom: solid var(--border-width) var(--color-border);
   margin: 0.25rem 1rem;

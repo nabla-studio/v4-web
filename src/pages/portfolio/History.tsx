@@ -58,7 +58,7 @@ export const History = () => {
 const $ExportButton = styled(ExportHistoryDropdown)`
   margin-left: auto;
 `;
-  
+
 const $NavigationMenu = styled(NavigationMenu)`
   --header-horizontal-padding: 1rem;
 
