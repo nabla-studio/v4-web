@@ -87,6 +87,8 @@ type StyleProps = {
   withBaseFont?: boolean;
 };
 
+export type OutputProps = ElementProps & StyleProps;
+
 export const formatNumber = (params: ElementProps) => {
   const {
     value,
@@ -205,8 +207,6 @@ export const formatNumber = (params: ElementProps) => {
   };
 };
 
-export type OutputProps = ElementProps & StyleProps;
-
 export const Output = ({
   type,
   value,
@@ -231,6 +231,8 @@ export const Output = ({
   const selectedLocale = useAppSelector(getSelectedLocale);
   const stringGetter = useStringGetter();
   const isDetailsLoading = useContext(LoadingContext);
+  const { decimal: LOCALE_DECIMAL_SEPARATOR, group: LOCALE_GROUP_SEPARATOR } =
+    useLocaleSeparators();
 
   if (!!isLoading || !!isDetailsLoading) {
     return <LoadingOutput />;
@@ -332,7 +334,6 @@ export const Output = ({
     case OutputType.SmallPercent:
     case OutputType.Multiple: {
       const hasValue = value !== null && value !== undefined;
-
       const { sign, formattedString } = formatNumber({
         type,
         value,
@@ -355,40 +356,26 @@ export const Output = ({
 
           return (
             <NumberValue
-              value={Intl.NumberFormat(locale, {
-                style: 'decimal',
-                notation: 'compact',
-                maximumSignificantDigits: 3,
-              })
-                .format(Math.abs(value))
-                .toLowerCase()}
+            value={formattedString}
               withSubscript={withSubscript}
             />
           );
         },
         [OutputType.Number]: () => (
           <NumberValue
-            value={valueBN.toFormat(fractionDigits ?? 0, roundingMode, {
-              ...format,
-            })}
+            value={formattedString}
             withSubscript={withSubscript}
           />
         ),
         [OutputType.Fiat]: () => (
           <NumberValue
-            value={valueBN.toFormat(fractionDigits ?? USD_DECIMALS, roundingMode, {
-              ...format,
-              prefix: '$',
-            })}
+          value={formattedString}
             withSubscript={withSubscript}
           />
         ),
         [OutputType.SmallFiat]: () => (
           <NumberValue
-            value={valueBN.toFormat(fractionDigits ?? SMALL_USD_DECIMALS, roundingMode, {
-              ...format,
-              prefix: '$',
-            })}
+          value={formattedString}
             withSubscript={withSubscript}
           />
         ),
@@ -399,52 +386,32 @@ export const Output = ({
 
           return (
             <NumberValue
-              value={Intl.NumberFormat(locale, {
-                style: 'currency',
-                currency: 'USD',
-                notation: 'compact',
-                maximumSignificantDigits: 3,
-              })
-                .format(Math.abs(value))
-                .toLowerCase()}
+            value={formattedString}
               withSubscript={withSubscript}
             />
           );
         },
         [OutputType.Asset]: () => (
           <NumberValue
-            value={valueBN.toFormat(fractionDigits ?? TOKEN_DECIMALS, roundingMode, {
-              ...format,
-            })}
+          value={formattedString}
             withSubscript={withSubscript}
           />
         ),
         [OutputType.Percent]: () => (
           <NumberValue
-            value={valueBN.times(100).toFormat(fractionDigits ?? PERCENT_DECIMALS, roundingMode, {
-              ...format,
-              suffix: '%',
-            })}
+          value={formattedString}
             withSubscript={withSubscript}
           />
         ),
         [OutputType.SmallPercent]: () => (
           <NumberValue
-            value={valueBN
-              .times(100)
-              .toFormat(fractionDigits ?? SMALL_PERCENT_DECIMALS, roundingMode, {
-                ...format,
-                suffix: '%',
-              })}
+          value={formattedString}
             withSubscript={withSubscript}
           />
         ),
         [OutputType.Multiple]: () => (
           <NumberValue
-            value={valueBN.toFormat(fractionDigits ?? LEVERAGE_DECIMALS, roundingMode, {
-              ...format,
-              suffix: '×',
-            })}
+          value={formattedString}
             withSubscript={withSubscript}
           />
         ),

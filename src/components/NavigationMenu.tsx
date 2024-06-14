@@ -183,7 +183,7 @@ export const NavigationMenu = <MenuItemValue extends string, MenuGroupValue exte
       ))}
 
       {submenuPlacement === 'viewport' && <$Viewport data-orientation={orientation} />}
-        
+
       {slotAfter}
     </$Root>
   );
