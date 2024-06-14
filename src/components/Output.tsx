@@ -88,8 +88,9 @@ type StyleProps = {
 };
 
 export type OutputProps = ElementProps & StyleProps;
+export type FormatNumberProps = ElementProps & { decimal?: string; group?: string }
 
-export const formatNumber = (params: ElementProps) => {
+export const formatNumber = (params: FormatNumberProps) => {
   const {
     value,
     showSign = ShowSign.Negative,
@@ -98,9 +99,9 @@ export const formatNumber = (params: ElementProps) => {
     locale = navigator.language || 'en-US',
     fractionDigits,
     roundingMode = BigNumber.ROUND_HALF_UP,
+    decimal: LOCALE_DECIMAL_SEPARATOR,
+    group: LOCALE_GROUP_SEPARATOR,
   } = params;
-  const { decimal: LOCALE_DECIMAL_SEPARATOR, group: LOCALE_GROUP_SEPARATOR } =
-    useLocaleSeparators();
 
   const valueBN = MustBigNumber(value).abs();
   const isNegative = MustBigNumber(value).isNegative();
@@ -346,6 +347,8 @@ export const Output = ({
         timeOptions,
         withParentheses,
         locale,
+        decimal: LOCALE_DECIMAL_SEPARATOR,
+        group: LOCALE_GROUP_SEPARATOR,
       });
 
       const numberRenderers = {
