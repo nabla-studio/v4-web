@@ -33,7 +33,7 @@ dependencies:
     specifier: 1.7.85
     version: 1.7.85
   '@dydxprotocol/v4-client-js':
-    specifier: ^1.1.20
+    specifier: ^1.1.22
     version: 1.1.22
   '@dydxprotocol/v4-localization':
     specifier: ^1.1.127
@@ -15691,14 +15691,6 @@ packages:
       strip-final-newline: 3.0.0
     dev: true
 
-  /export-to-csv@1.2.3:
-    resolution:
-      {
-        integrity: sha512-N+hWdpEQNSn4BeltgusTuW65gC+2B5hmOWe4Eu0gw0NwKq92dzD+5ObSSBUeKTy7k+PGG7xDqaThPg8elZ7k+g==,
-      }
-    engines: { node: ^v12.20.0 || >=v14.13.0 }
-    dev: false
-
   /execa@8.0.1:
     resolution:
       {
@@ -15756,6 +15748,14 @@ packages:
       jest-message-util: 29.7.0
       jest-util: 29.7.0
     dev: true
+
+  /export-to-csv@1.2.3:
+    resolution:
+      {
+        integrity: sha512-N+hWdpEQNSn4BeltgusTuW65gC+2B5hmOWe4Eu0gw0NwKq92dzD+5ObSSBUeKTy7k+PGG7xDqaThPg8elZ7k+g==,
+      }
+    engines: { node: ^v12.20.0 || >=v14.13.0 }
+    dev: false
 
   /ext@1.7.0:
     resolution:
