@@ -71,7 +71,6 @@ export { default as TriangleIcon } from './triangle.svg';
 export { default as TryAgainIcon } from './try-again.svg';
 export { default as WarningIcon } from './warning.svg';
 export { default as WithdrawIcon } from './withdraw.svg';
-export { default as DownloadIcon } from './download.svg';
 
 // Wallets
 export { default as AppleIcon } from './wallets/apple.svg';
