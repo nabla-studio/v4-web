@@ -88,7 +88,7 @@ type StyleProps = {
 };
 
 export type OutputProps = ElementProps & StyleProps;
-export type FormatNumberProps = ElementProps & { decimal?: string; group?: string }
+export type FormatNumberProps = ElementProps & { decimal?: string; group?: string };
 
 export const formatNumber = (params: FormatNumberProps) => {
   const {
