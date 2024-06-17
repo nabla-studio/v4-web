@@ -283,6 +283,8 @@ export const formatNumber = (params: FormatNumberParams) => {
         suffix: '×',
       });
       break;
+    default:
+      break;
   }
 
   return {
