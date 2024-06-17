@@ -88,7 +88,7 @@ type StyleProps = {
 };
 
 export type OutputProps = ElementProps & StyleProps;
-export type FormatNumberProps = ElementProps & { decimal?: string; group?: string }
+export type FormatNumberProps = ElementProps & { decimal?: string; group?: string };
 
 export const formatNumber = (params: FormatNumberProps) => {
   const {
@@ -357,66 +357,35 @@ export const Output = ({
             throw new Error('value must be a number for compact number output');
           }
 
-          return (
-            <NumberValue
-            value={formattedString}
-              withSubscript={withSubscript}
-            />
-          );
+          return <NumberValue value={formattedString} withSubscript={withSubscript} />;
         },
         [OutputType.Number]: () => (
-          <NumberValue
-            value={formattedString}
-            withSubscript={withSubscript}
-          />
+          <NumberValue value={formattedString} withSubscript={withSubscript} />
         ),
         [OutputType.Fiat]: () => (
-          <NumberValue
-          value={formattedString}
-            withSubscript={withSubscript}
-          />
+          <NumberValue value={formattedString} withSubscript={withSubscript} />
         ),
         [OutputType.SmallFiat]: () => (
-          <NumberValue
-          value={formattedString}
-            withSubscript={withSubscript}
-          />
+          <NumberValue value={formattedString} withSubscript={withSubscript} />
         ),
         [OutputType.CompactFiat]: () => {
           if (!isNumber(value)) {
             throw new Error('value must be a number for compact fiat output');
           }
 
-          return (
-            <NumberValue
-            value={formattedString}
-              withSubscript={withSubscript}
-            />
-          );
+          return <NumberValue value={formattedString} withSubscript={withSubscript} />;
         },
         [OutputType.Asset]: () => (
-          <NumberValue
-          value={formattedString}
-            withSubscript={withSubscript}
-          />
+          <NumberValue value={formattedString} withSubscript={withSubscript} />
         ),
         [OutputType.Percent]: () => (
-          <NumberValue
-          value={formattedString}
-            withSubscript={withSubscript}
-          />
+          <NumberValue value={formattedString} withSubscript={withSubscript} />
         ),
         [OutputType.SmallPercent]: () => (
-          <NumberValue
-          value={formattedString}
-            withSubscript={withSubscript}
-          />
+          <NumberValue value={formattedString} withSubscript={withSubscript} />
         ),
         [OutputType.Multiple]: () => (
-          <NumberValue
-          value={formattedString}
-            withSubscript={withSubscript}
-          />
+          <NumberValue value={formattedString} withSubscript={withSubscript} />
         ),
       };
       return (
