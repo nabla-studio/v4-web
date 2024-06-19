@@ -204,8 +204,6 @@ export const formatNumber = (params: FormatNumberProps) => {
       break;
     default:
       break;
-    default:
-      break;
   }
 
   return {
