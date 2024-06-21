@@ -24,8 +24,8 @@ export default () => {
     <Suspense fallback={<LoadingSpace id="token-page" />}>
       <Routes>
         <Route path={TokenRoute.TradingRewards} element={<RewardsPage />} />
-        <Route path={TokenRoute.StakingRewards} element={<StakingPage />} />
-        <Route path={TokenRoute.Governance} element={<GovernancePage />} />
+        {!isStakingEnabled && <Route path={TokenRoute.StakingRewards} element={<StakingPage />} />}
+        {!isStakingEnabled && <Route path={TokenRoute.Governance} element={<GovernancePage />} />}
         <Route path="*" element={<Navigate to={TokenRoute.TradingRewards} replace />} />
       </Routes>
     </Suspense>
