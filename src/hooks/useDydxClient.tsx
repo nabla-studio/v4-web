@@ -183,9 +183,7 @@ const useDydxClientContext = () => {
         1
       );
 
-      /**
-       * We get all the pages but we should exclude the first one, we already have this data
-       */
+      // We get all the pages but we should exclude the first one, we already have this data
       const pages = Array.from(
         {
           length: Math.ceil(totalResults / pageSize) - 1,
@@ -235,9 +233,7 @@ const useDydxClientContext = () => {
         1
       );
 
-      /**
-       * We get all the pages but we should exclude the first one, we already have this data
-       */
+      // We get all the pages but we should exclude the first one, we already have this data
       const pages = Array.from(
         {
           length: Math.ceil(totalResults / pageSize) - 1,
