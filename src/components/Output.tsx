@@ -94,7 +94,11 @@ type StyleProps = {
 };
 
 export type OutputProps = ElementProps & StyleProps;
-export type FormatNumberProps = ElementProps & { minimumFractionDigits?: number; decimal?: string; group?: string };
+export type FormatNumberProps = ElementProps & {
+  minimumFractionDigits?: number;
+  decimal?: string;
+  group?: string;
+};
 
 export const formatNumber = (params: FormatNumberProps) => {
   const {
@@ -132,7 +136,7 @@ export const formatNumber = (params: FormatNumberProps) => {
         }
       : {}),
   };
-  
+
   const getFormattedVal = (
     val: BigNumber,
     fallbackDecimals: number,
@@ -191,7 +195,9 @@ export const formatNumber = (params: FormatNumberProps) => {
       formattedString = getFormattedVal(valueBN, PERCENT_DECIMALS, { suffix: '%' });
       break;
     case OutputType.SmallPercent:
-      formattedString = getFormattedVal(valueBN.times(100), SMALL_PERCENT_DECIMALS, { suffix: '%' });
+      formattedString = getFormattedVal(valueBN.times(100), SMALL_PERCENT_DECIMALS, {
+        suffix: '%',
+      });
       break;
     case OutputType.Multiple:
       formattedString = getFormattedVal(valueBN, LEVERAGE_DECIMALS, { suffix: '×' });
