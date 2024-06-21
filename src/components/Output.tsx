@@ -58,11 +58,17 @@ export enum ShowSign {
   None = 'None',
 }
 
+type FormattingOptions = {
+  prefix?: string;
+  suffix?: string;
+};
+
 type ElementProps = {
   type: OutputType;
   value?: BigNumberish | null;
   isLoading?: boolean;
   fractionDigits?: number | null;
+  minimumFractionDigits?: number;
   showSign?: ShowSign;
   slotLeft?: React.ReactNode;
   slotRight?: React.ReactNode;
@@ -88,7 +94,7 @@ type StyleProps = {
 };
 
 export type OutputProps = ElementProps & StyleProps;
-export type FormatNumberProps = ElementProps & { decimal?: string; group?: string };
+export type FormatNumberProps = ElementProps & { minimumFractionDigits?: number; decimal?: string; group?: string };
 
 export const formatNumber = (params: FormatNumberProps) => {
   const {
@@ -101,6 +107,7 @@ export const formatNumber = (params: FormatNumberProps) => {
     roundingMode = BigNumber.ROUND_HALF_UP,
     decimal: LOCALE_DECIMAL_SEPARATOR,
     group: LOCALE_GROUP_SEPARATOR,
+    minimumFractionDigits,
   } = params;
 
   const valueBN = MustBigNumber(value).abs();
@@ -125,6 +132,19 @@ export const formatNumber = (params: FormatNumberProps) => {
         }
       : {}),
   };
+  
+  const getFormattedVal = (
+    val: BigNumber,
+    fallbackDecimals: number,
+    formattingOptions?: FormattingOptions
+  ) => {
+    const numDigits = fractionDigits ?? fallbackDecimals;
+    const precisionVal = minimumFractionDigits
+      ? MustBigNumber(val.toPrecision(minimumFractionDigits, roundingMode)).abs()
+      : val;
+    const dp = minimumFractionDigits ? precisionVal.decimalPlaces() ?? numDigits : numDigits;
+    return precisionVal.toFormat(dp, roundingMode, { ...format, ...formattingOptions });
+  };
 
   let formattedString: string = 'NaN';
 
@@ -143,21 +163,13 @@ export const formatNumber = (params: FormatNumberProps) => {
         .toLowerCase();
       break;
     case OutputType.Number:
-      formattedString = valueBN.toFormat(fractionDigits ?? 0, roundingMode, {
-        ...format,
-      });
+      formattedString = getFormattedVal(valueBN, 0);
       break;
     case OutputType.Fiat:
-      formattedString = valueBN.toFormat(fractionDigits ?? USD_DECIMALS, roundingMode, {
-        ...format,
-        prefix: '$',
-      });
+      formattedString = getFormattedVal(valueBN, USD_DECIMALS, { prefix: '$' });
       break;
     case OutputType.SmallFiat:
-      formattedString = valueBN.toFormat(fractionDigits ?? SMALL_USD_DECIMALS, roundingMode, {
-        ...format,
-        prefix: '$',
-      });
+      formattedString = getFormattedVal(valueBN, SMALL_USD_DECIMALS, { prefix: '$' });
       break;
     case OutputType.CompactFiat:
       if (!isNumber(value)) {
@@ -173,31 +185,16 @@ export const formatNumber = (params: FormatNumberProps) => {
         .toLowerCase();
       break;
     case OutputType.Asset:
-      formattedString = valueBN.toFormat(fractionDigits ?? TOKEN_DECIMALS, roundingMode, {
-        ...format,
-      });
+      formattedString = getFormattedVal(valueBN, TOKEN_DECIMALS);
       break;
     case OutputType.Percent:
-      formattedString = valueBN
-        .times(100)
-        .toFormat(fractionDigits ?? PERCENT_DECIMALS, roundingMode, {
-          ...format,
-          suffix: '%',
-        });
+      formattedString = getFormattedVal(valueBN, PERCENT_DECIMALS, { suffix: '%' });
       break;
     case OutputType.SmallPercent:
-      formattedString = valueBN
-        .times(100)
-        .toFormat(fractionDigits ?? SMALL_PERCENT_DECIMALS, roundingMode, {
-          ...format,
-          suffix: '%',
-        });
+      formattedString = getFormattedVal(valueBN.times(100), SMALL_PERCENT_DECIMALS, { suffix: '%' });
       break;
     case OutputType.Multiple:
-      formattedString = valueBN.toFormat(fractionDigits ?? LEVERAGE_DECIMALS, roundingMode, {
-        ...format,
-        suffix: '×',
-      });
+      formattedString = getFormattedVal(valueBN, LEVERAGE_DECIMALS, { suffix: '×' });
       break;
     default:
       break;
@@ -215,6 +212,7 @@ export const Output = ({
   value,
   isLoading,
   fractionDigits,
+  minimumFractionDigits,
   showSign = ShowSign.Negative,
   slotLeft,
   slotRight,
@@ -351,6 +349,7 @@ export const Output = ({
         locale,
         decimal: LOCALE_DECIMAL_SEPARATOR,
         group: LOCALE_GROUP_SEPARATOR,
+        minimumFractionDigits,
       });
 
       const numberRenderers = {
