@@ -96,7 +96,7 @@ export const AnalyticsEvents = unionize(
       indexerBlockHeight?: number;
       trailingBlocks?: number;
     }>(),
-      
+
     // Export CSV
     ExportCsvClick: ofType<{}>(),
     ExportDownloadClick: ofType<{
