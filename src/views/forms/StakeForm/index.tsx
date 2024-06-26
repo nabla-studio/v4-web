@@ -8,7 +8,7 @@ import { formatUnits } from 'viem';
 
 import { AMOUNT_RESERVED_FOR_GAS_DYDX } from '@/constants/account';
 import { AlertType } from '@/constants/alerts';
-import { AnalyticsEvent } from '@/constants/analytics';
+import { AnalyticsEvents } from '@/constants/analytics';
 import { DialogTypes } from '@/constants/dialogs';
 import { STRING_KEYS } from '@/constants/localization';
 import { NumberSign } from '@/constants/numbers';
@@ -90,11 +90,7 @@ export const StakeForm = ({ onDone, className }: StakeFormProps) => {
         .then((stdFee) => {
           if (stdFee.amount.length > 0) {
             const feeAmount = stdFee.amount[0].amount;
-            setFee(
-              MustBigNumber(formatUnits(BigInt(feeAmount), chainTokenDecimals)).plus(
-                MustBigNumber(AMOUNT_RESERVED_FOR_GAS_DYDX)
-              )
-            );
+            setFee(MustBigNumber(formatUnits(BigInt(feeAmount), chainTokenDecimals)));
           }
         })
         .catch((err) => {
@@ -112,10 +108,12 @@ export const StakeForm = ({ onDone, className }: StakeFormProps) => {
   const debouncedChangeTrack = useMemo(
     () =>
       debounce((amount?: number, validator?: string) => {
-        track(AnalyticsEvent.StakeInput, {
-          amount,
-          validatorAddress: validator,
-        });
+        track(
+          AnalyticsEvents.StakeInput({
+            amount,
+            validatorAddress: validator,
+          })
+        );
       }, 1000),
     []
   );
@@ -134,11 +132,13 @@ export const StakeForm = ({ onDone, className }: StakeFormProps) => {
       const tx = await delegate(selectedValidator.operatorAddress, amountBN.toNumber());
       const txHash = hashFromTx(tx.hash);
 
-      track(AnalyticsEvent.StakeTransaction, {
-        txHash,
-        amount: amountBN.toNumber(),
-        validatorAddress: selectedValidator.operatorAddress,
-      });
+      track(
+        AnalyticsEvents.StakeTransaction({
+          txHash,
+          amount: amountBN.toNumber(),
+          validatorAddress: selectedValidator.operatorAddress,
+        })
+      );
       onDone?.();
     } catch (err) {
       log('StakeForm/onStake', err);
@@ -169,19 +169,9 @@ export const StakeForm = ({ onDone, className }: StakeFormProps) => {
     },
   ];
 
-  const openKeplrDialog = () =>
-    dispatch(
-      forceOpenDialog({
-        type: DialogTypes.ExternalNavKeplr,
-      })
-    );
+  const openKeplrDialog = () => dispatch(forceOpenDialog(DialogTypes.ExternalNavKeplr()));
 
-  const openStrideDialog = () =>
-    dispatch(
-      forceOpenDialog({
-        type: DialogTypes.ExternalNavStride,
-      })
-    );
+  const openStrideDialog = () => dispatch(forceOpenDialog(DialogTypes.ExternalNavStride()));
 
   return (
     <$Form
