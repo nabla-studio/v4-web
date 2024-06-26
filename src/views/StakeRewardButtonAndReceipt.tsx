@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { SelectedGasDenom } from '@dydxprotocol/v4-client-js';
-import { shallowEqual, useDispatch } from 'react-redux';
+import { shallowEqual } from 'react-redux';
 import styled, { css } from 'styled-components';
 
 import { AlertType } from '@/constants/alerts';
-import { ButtonAction, ButtonType } from '@/constants/buttons';
+import { ButtonAction, ButtonSize, ButtonType } from '@/constants/buttons';
 import { DialogTypes } from '@/constants/dialogs';
 import { STRING_KEYS } from '@/constants/localization';
 
@@ -16,7 +16,7 @@ import { useTokenConfigs } from '@/hooks/useTokenConfigs';
 import { OnboardingTriggerButton } from '@/views/dialogs/OnboardingTriggerButton';
 
 import { calculateCanAccountTrade } from '@/state/accountCalculators';
-import { useAppSelector } from '@/state/appTypes';
+import { useAppDispatch, useAppSelector } from '@/state/appTypes';
 import { forceOpenDialog } from '@/state/dialogs';
 
 import { BigNumberish, MustBigNumber } from '@/lib/numbers';
@@ -70,7 +70,7 @@ export const StakeRewardButtonAndReceipt = ({
   onClick,
   className,
 }: ElementProps & StyleProps) => {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const stringGetter = useStringGetter();
 
   const canAccountTrade = useAppSelector(calculateCanAccountTrade, shallowEqual);
@@ -79,7 +79,7 @@ export const StakeRewardButtonAndReceipt = ({
   const [errorToDisplay, setErrorToDisplay] = useState(alert);
 
   const depositFunds = useCallback(
-    () => dispatch(forceOpenDialog({ type: DialogTypes.Deposit })),
+    () => dispatch(forceOpenDialog(DialogTypes.Deposit())),
     [dispatch]
   );
 
@@ -124,6 +124,8 @@ export const StakeRewardButtonAndReceipt = ({
     [errorToDisplay]
   );
 
+  const buttonSize = ButtonSize.Base;
+
   return (
     <>
       {errorToDisplay && (
@@ -134,12 +136,13 @@ export const StakeRewardButtonAndReceipt = ({
           tooltipString={shouldDisplayErrorAsWarning() ? errorToDisplay?.message : undefined}
         >
           {!canAccountTrade ? (
-            <$OnboardingTriggerButton />
+            <$OnboardingTriggerButton size={buttonSize} />
           ) : (
             errorToDisplay?.slotButton ?? (
               <$Button
                 action={ButtonAction.Primary}
                 type={isForm ? ButtonType.Submit : ButtonType.Button}
+                size={buttonSize}
                 onClick={onClick}
                 slotLeft={
                   shouldDisplayErrorAsWarning() ? (
@@ -167,6 +170,8 @@ const $AlertMessage = styled(AlertMessage)`
 
 const $WithDetailsReceipt = styled(WithDetailsReceipt)<{ isForm: boolean }>`
   --withReceipt-backgroundColor: var(--color-layer-2);
+
+  color: var(--color-text-form);
   width: 100%;
 
   ${({ isForm }) =>

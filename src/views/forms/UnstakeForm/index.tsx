@@ -1,10 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 
+import { debounce } from 'lodash';
 import { type NumberFormatValues } from 'react-number-format';
 import styled from 'styled-components';
 import { formatUnits } from 'viem';
 
 import { AlertType } from '@/constants/alerts';
+import { AnalyticsEvents } from '@/constants/analytics';
+import { ButtonAction } from '@/constants/buttons';
 import { STRING_KEYS } from '@/constants/localization';
 import { NumberSign } from '@/constants/numbers';
 
@@ -17,6 +20,7 @@ import { useTokenConfigs } from '@/hooks/useTokenConfigs';
 import { formMixins } from '@/styles/formMixins';
 import { layoutMixins } from '@/styles/layoutMixins';
 
+import { Button } from '@/components/Button';
 import { DiffOutput } from '@/components/DiffOutput';
 import { FormInput } from '@/components/FormInput';
 import { FormMaxInputToggleButton } from '@/components/FormMaxInputToggleButton';
@@ -28,8 +32,10 @@ import { WithDetailsReceipt } from '@/components/WithDetailsReceipt';
 import { StakeButtonAlert } from '@/views/StakeRewardButtonAndReceipt';
 import { UnstakeButtonAndReceipt } from '@/views/forms/UnstakeForm/UnstakeButtonAndReceipt';
 
+import { track } from '@/lib/analytics';
 import { BigNumberish, MustBigNumber } from '@/lib/numbers';
 import { log } from '@/lib/telemetry';
+import { hashFromTx } from '@/lib/txUtils';
 
 type UnstakeFormProps = {
   onDone?: () => void;
@@ -48,10 +54,6 @@ export const UnstakeForm = ({ onDone, className }: UnstakeFormProps) => {
   const [fee, setFee] = useState<BigNumberish>();
   const [amounts, setAmounts] = useState<Record<string, number | undefined>>({});
   const [isLoading, setIsLoading] = useState(false);
-
-  const onChangeAmount = (validator: string, value: number | undefined) => {
-    setAmounts({ ...amounts, [validator]: value });
-  };
 
   const isEachAmountValid = useMemo(() => {
     return (
@@ -73,11 +75,14 @@ export const UnstakeForm = ({ onDone, className }: UnstakeFormProps) => {
   }, [amounts]);
 
   const isTotalAmountValid = totalAmount && totalAmount > 0;
-
   const isAmountValid = isEachAmountValid && isTotalAmountValid;
+  const allAmountsEmpty =
+    !amounts || Object.values(amounts).filter((amount) => amount !== undefined).length === 0;
+  const showClearButton =
+    amounts && Object.values(amounts).filter((amount) => amount !== undefined).length > 0;
 
   useEffect(() => {
-    if (Object.keys(amounts).length > 0 && !isAmountValid) {
+    if (!isAmountValid && !allAmountsEmpty) {
       setError({
         key: STRING_KEYS.ISOLATED_MARGIN_ADJUSTMENT_INVALID_AMOUNT,
         type: AlertType.Error,
@@ -90,7 +95,7 @@ export const UnstakeForm = ({ onDone, className }: UnstakeFormProps) => {
         message: stringGetter({ key: STRING_KEYS.UNSTAKING_PERIOD_DESCRIPTION }),
       });
     }
-  }, [stringGetter, amounts, isAmountValid]);
+  }, [stringGetter, isAmountValid, allAmountsEmpty]);
 
   useEffect(() => {
     if (isAmountValid) {
@@ -120,7 +125,16 @@ export const UnstakeForm = ({ onDone, className }: UnstakeFormProps) => {
     }
     try {
       setIsLoading(true);
-      await undelegate(amounts);
+      const tx = await undelegate(amounts);
+      const txHash = hashFromTx(tx.hash);
+
+      track(
+        AnalyticsEvents.UnstakeTransaction({
+          txHash,
+          amount: totalAmount,
+          validatorAddresses: Object.keys(amounts),
+        })
+      );
       onDone?.();
     } catch (err) {
       log('UnstakeForm/onUnstake', err);
@@ -132,16 +146,46 @@ export const UnstakeForm = ({ onDone, className }: UnstakeFormProps) => {
     } finally {
       setIsLoading(false);
     }
-  }, [isAmountValid, amounts, undelegate, onDone]);
+  }, [isAmountValid, amounts, undelegate, onDone, totalAmount]);
+
+  const debouncedChangeTrack = useMemo(
+    () =>
+      debounce((amount: number | undefined, validator: string) => {
+        track(
+          AnalyticsEvents.UnstakeInput({
+            amount,
+            validatorAddress: validator,
+          })
+        );
+      }, 1000),
+    []
+  );
+
+  const onChangeAmount = useCallback((validator: string, value: number | undefined) => {
+    setAmounts((a) => ({ ...a, [validator]: value }));
+    debouncedChangeTrack(value, validator);
+  }, []);
+
+  const setAllUnstakeAmountsToMax = useCallback(() => {
+    currentDelegations?.forEach((delegation) => {
+      onChangeAmount(delegation.validator, MustBigNumber(delegation.amount).toNumber());
+    });
+  }, [currentDelegations, onChangeAmount]);
+
+  const clearAllUnstakeAmounts = useCallback(() => {
+    currentDelegations?.forEach((delegation) => {
+      onChangeAmount(delegation.validator, undefined);
+    });
+  }, [currentDelegations, onChangeAmount]);
 
   let description = stringGetter({
     key: STRING_KEYS.CURRENTLY_STAKING,
     params: {
       AMOUNT: (
-        <>
+        <$StakedAmount>
           {nativeStakingBalance}
           <Tag>{chainTokenLabel}</Tag>
-        </>
+        </$StakedAmount>
       ),
     },
   });
@@ -203,6 +247,7 @@ export const UnstakeForm = ({ onDone, className }: UnstakeFormProps) => {
           ]}
         >
           <FormInput
+            id="unstakeAmount"
             label={stringGetter({ key: STRING_KEYS.AMOUNT_TO_UNSTAKE })}
             type={InputType.Number}
             onChange={({ floatValue }: NumberFormatValues) =>
@@ -223,7 +268,6 @@ export const UnstakeForm = ({ onDone, className }: UnstakeFormProps) => {
                 }
               />
             }
-            disabled={isLoading}
           />
         </$WithDetailsReceipt>
       )}
@@ -235,15 +279,21 @@ export const UnstakeForm = ({ onDone, className }: UnstakeFormProps) => {
               key: STRING_KEYS.VALIDATOR,
             })}
           </div>
-          <div>
+          <$SpacedRow>
             {stringGetter({
               key: STRING_KEYS.AMOUNT_TO_UNSTAKE,
             })}
-          </div>
+            {showClearButton ? (
+              <$Button onClick={clearAllUnstakeAmounts} action={ButtonAction.Reset}>
+                {stringGetter({ key: STRING_KEYS.CLEAR })}
+              </$Button>
+            ) : (
+              <$AllButton onClick={setAllUnstakeAmountsToMax}>
+                {stringGetter({ key: STRING_KEYS.ALL })}
+              </$AllButton>
+            )}
+          </$SpacedRow>
           {currentDelegations?.map((delegation) => {
-            if (!delegation) {
-              return null;
-            }
             const balance = MustBigNumber(delegation.amount).toNumber();
             return (
               <React.Fragment key={delegation.validator}>
@@ -266,7 +316,6 @@ export const UnstakeForm = ({ onDone, className }: UnstakeFormProps) => {
                       }
                     />
                   }
-                  disabled={isLoading}
                 />
               </React.Fragment>
             );
@@ -280,6 +329,7 @@ export const UnstakeForm = ({ onDone, className }: UnstakeFormProps) => {
           fee={fee ?? undefined}
           isLoading={isLoading || Boolean(isAmountValid && !fee)}
           amount={totalAmount}
+          allAmountsEmpty={allAmountsEmpty}
         />
       </$Footer>
     </$Form>
@@ -312,4 +362,24 @@ const $Footer = styled.footer`
 `;
 const $WithDetailsReceipt = styled(WithDetailsReceipt)`
   --withReceipt-backgroundColor: var(--color-layer-2);
+`;
+
+const $StakedAmount = styled.span`
+  ${layoutMixins.inlineRow}
+  color: var(--color-text-1);
+`;
+
+const $SpacedRow = styled.div`
+  ${layoutMixins.spacedRow}
+`;
+
+const $Button = styled(Button)`
+  --button-border: none;
+  --button-padding: 0;
+  --button-height: auto;
+  --button-hover-filter: none;
+`;
+
+const $AllButton = styled($Button)`
+  --button-textColor: var(--color-accent);
 `;

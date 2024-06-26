@@ -86,6 +86,12 @@ class DydxChainTransactions implements AbacusDYDXChainTransactionsProtocol {
     this.localWallet = localWallet;
   }
 
+  clearAccounts() {
+    this.localWallet = undefined;
+    this.nobleWallet = undefined;
+    this.hdkey = undefined;
+  }
+
   setNobleWallet(nobleWallet: LocalWallet) {
     try {
       this.nobleWallet = nobleWallet;
@@ -552,16 +558,21 @@ class DydxChainTransactions implements AbacusDYDXChainTransactionsProtocol {
   }
 
   async subaccountTransfer(params: {
+    senderAddress: string;
     subaccountNumber: number;
     amount: string;
     destinationAddress: string;
     destinationSubaccountNumber: number;
   }): Promise<string> {
-    if (!this.compositeClient || !this.localWallet) {
-      throw new Error('Missing compositeClient or localWallet');
-    }
-
     try {
+      if (!this.compositeClient || !this.localWallet) {
+        throw new Error('Missing compositeClient or localWallet');
+      }
+
+      if (params.senderAddress !== this.localWallet.address) {
+        throw new Error('Sender address does not match local wallet');
+      }
+
       const tx = await this.compositeClient.transferToSubaccount(
         new SubaccountClient(this.localWallet, params.subaccountNumber),
         params.destinationAddress,

@@ -6,12 +6,16 @@ import styled, { css } from 'styled-components';
 import { formatUnits } from 'viem';
 
 import { AlertType } from '@/constants/alerts';
+import { AnalyticsEvents } from '@/constants/analytics';
+import { DialogProps, StakingRewardDialogProps } from '@/constants/dialogs';
 import { STRING_KEYS } from '@/constants/localization';
 import { NumberSign, SMALL_USD_DECIMALS } from '@/constants/numbers';
 
 import { useStringGetter } from '@/hooks/useStringGetter';
 import { useSubaccount } from '@/hooks/useSubaccount';
 import { useTokenConfigs } from '@/hooks/useTokenConfigs';
+
+import { layoutMixins } from '@/styles/layoutMixins';
 
 import { AssetIcon } from '@/components/AssetIcon';
 import { Dialog } from '@/components/Dialog';
@@ -27,16 +31,16 @@ import { getSubaccountEquity } from '@/state/accountSelectors';
 import { useAppSelector } from '@/state/appTypes';
 import { getChartDotBackground } from '@/state/configsSelectors';
 
+import { track } from '@/lib/analytics';
 import { BigNumberish, MustBigNumber } from '@/lib/numbers';
 import { log } from '@/lib/telemetry';
+import { hashFromTx } from '@/lib/txUtils';
 
-type ElementProps = {
-  validators: string[];
-  usdcRewards: BigNumberish;
-  setIsOpen: (open: boolean) => void;
-};
-
-export const StakingRewardDialog = ({ validators, usdcRewards, setIsOpen }: ElementProps) => {
+export const StakingRewardDialog = ({
+  usdcRewards,
+  setIsOpen,
+  validators,
+}: DialogProps<StakingRewardDialogProps>) => {
   const stringGetter = useStringGetter();
   const { usdcLabel, usdcDecimals } = useTokenConfigs();
 
@@ -85,9 +89,9 @@ export const StakingRewardDialog = ({ validators, usdcRewards, setIsOpen }: Elem
       {
         key: 'equity',
         label: (
-          <>
+          <$RowItem>
             {stringGetter({ key: STRING_KEYS.EQUITY })} <Tag>{usdcLabel}</Tag>
-          </>
+          </$RowItem>
         ),
         value: (
           <DiffOutput
@@ -102,9 +106,9 @@ export const StakingRewardDialog = ({ validators, usdcRewards, setIsOpen }: Elem
       {
         key: 'gas-fees',
         label: (
-          <>
+          <$RowItem>
             {stringGetter({ key: STRING_KEYS.EST_GAS })} <Tag>{usdcLabel}</Tag>
-          </>
+          </$RowItem>
         ),
         value: <Output type={OutputType.Fiat} value={fee} />,
       },
@@ -115,7 +119,15 @@ export const StakingRewardDialog = ({ validators, usdcRewards, setIsOpen }: Elem
     try {
       setIsLoading(true);
       setError(undefined);
-      await withdrawReward(validators);
+      const tx = await withdrawReward(validators);
+      const txHash = hashFromTx(tx.hash);
+
+      track(
+        AnalyticsEvents.ClaimTransaction({
+          txHash,
+          amount: usdcRewards.toString(),
+        })
+      );
       setIsOpen(false);
     } catch (err) {
       log('StakeRewardDialog/withdrawReward', err);
@@ -127,7 +139,7 @@ export const StakingRewardDialog = ({ validators, usdcRewards, setIsOpen }: Elem
     } finally {
       setIsLoading(false);
     }
-  }, [validators, withdrawReward, setIsOpen]);
+  }, [validators, withdrawReward, setIsOpen, usdcRewards]);
 
   return (
     <$Dialog isOpen setIsOpen={setIsOpen} hasHeaderBlur={false}>
@@ -179,6 +191,7 @@ export const StakingRewardDialog = ({ validators, usdcRewards, setIsOpen }: Elem
 
 const $Dialog = styled(Dialog)`
   --dialog-header-paddingBottom: 0rem;
+  --dialog-width: 25rem;
 `;
 
 const $Container = styled.div<{ backgroundImagePath: string }>`
@@ -201,6 +214,10 @@ const $Container = styled.div<{ backgroundImagePath: string }>`
     `}
     mask-image: linear-gradient(to bottom, var(--color-layer-3) 20%, transparent);
   }
+`;
+
+const $RowItem = styled.div`
+  ${layoutMixins.inlineRow};
 `;
 
 const $AssetContainer = styled.div`

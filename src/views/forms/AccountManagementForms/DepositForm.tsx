@@ -10,12 +10,13 @@ import erc20 from '@/abi/erc20.json';
 import erc20_usdt from '@/abi/erc20_usdt.json';
 import { TransferInputField, TransferInputTokenResource, TransferType } from '@/constants/abacus';
 import { AlertType } from '@/constants/alerts';
-import { AnalyticsEvent, AnalyticsEventData } from '@/constants/analytics';
+import { AnalyticsEventPayloads } from '@/constants/analytics';
 import { ButtonSize } from '@/constants/buttons';
 import { STRING_KEYS } from '@/constants/localization';
 import { isMainnet } from '@/constants/networks';
 import { TransferNotificationTypes } from '@/constants/notifications';
 import {
+  DEFAULT_GAS_LIMIT,
   MAX_CCTP_TRANSFER_AMOUNT,
   MAX_PRICE_IMPACT,
   MIN_CCTP_TRANSFER_AMOUNT,
@@ -28,13 +29,14 @@ import { useAccounts } from '@/hooks/useAccounts';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useLocalNotifications } from '@/hooks/useLocalNotifications';
 import { useStringGetter } from '@/hooks/useStringGetter';
+import { useTokenConfigs } from '@/hooks/useTokenConfigs';
 
 import { formMixins } from '@/styles/formMixins';
 
 import { AlertMessage } from '@/components/AlertMessage';
-import { Button } from '@/components/Button';
 import { DiffOutput } from '@/components/DiffOutput';
 import { FormInput } from '@/components/FormInput';
+import { FormMaxInputToggleButton } from '@/components/FormMaxInputToggleButton';
 import { InputType } from '@/components/Input';
 import { LoadingSpace } from '@/components/Loading/LoadingSpinner';
 import { OutputType } from '@/components/Output';
@@ -58,7 +60,7 @@ import { SourceSelectMenu } from './SourceSelectMenu';
 import { TokenSelectMenu } from './TokenSelectMenu';
 
 type DepositFormProps = {
-  onDeposit?: (event?: AnalyticsEventData<AnalyticsEvent.TransferDeposit>) => void;
+  onDeposit?: (event?: AnalyticsEventPayloads['TransferDeposit']) => void;
   onError?: () => void;
 };
 
@@ -102,6 +104,8 @@ export const DepositForm = ({ onDeposit, onError }: DepositFormProps) => {
   const [fromAmount, setFromAmount] = useState('');
   const [slippage, setSlippage] = useState(isCctp ? 0 : 0.01); // 1% slippage
   const debouncedAmount = useDebounce<string>(fromAmount, 500);
+
+  const { usdcLabel } = useTokenConfigs();
 
   // Async Data
   const { balance } = useAccountBalance({
@@ -213,7 +217,6 @@ export const DepositForm = ({ onDeposit, onError }: DepositFormProps) => {
     if (!signerWagmi || !publicClientWagmi) throw new Error('Missing signer');
     if (!sourceToken?.address || !sourceToken.decimals)
       throw new Error('Missing source token address');
-    if (!sourceChain?.rpc) throw new Error('Missing source chain rpc');
     if (!requestPayload?.targetAddress) throw new Error('Missing target address');
     if (!requestPayload?.value) throw new Error('Missing transaction value');
     if (sourceToken?.address === NATIVE_TOKEN_ADDRESS) return;
@@ -259,13 +262,7 @@ export const DepositForm = ({ onDeposit, onError }: DepositFormProps) => {
         if (!signerWagmi) {
           throw new Error('Missing signer');
         }
-        if (
-          !requestPayload?.targetAddress ||
-          !requestPayload.data ||
-          !requestPayload.value ||
-          !requestPayload.gasLimit ||
-          !requestPayload.routeType
-        ) {
+        if (!requestPayload?.targetAddress || !requestPayload.data || !requestPayload.value) {
           throw new Error('Missing request payload');
         }
 
@@ -280,7 +277,7 @@ export const DepositForm = ({ onDeposit, onError }: DepositFormProps) => {
         const tx = {
           to: requestPayload.targetAddress as EvmAddress,
           data: requestPayload.data as EvmAddress,
-          gasLimit: BigInt(requestPayload.gasLimit),
+          gasLimit: BigInt(requestPayload.gasLimit || DEFAULT_GAS_LIMIT),
           value: requestPayload.routeType !== 'SEND' ? BigInt(requestPayload.value) : undefined,
         };
         const txHash = await signerWagmi.sendTransaction(tx);
@@ -355,7 +352,13 @@ export const DepositForm = ({ onDeposit, onError }: DepositFormProps) => {
         !debouncedAmountBN.isZero() &&
         MustBigNumber(debouncedAmountBN).lte(MIN_CCTP_TRANSFER_AMOUNT)
       ) {
-        return 'Amount must be greater than 10 USDC';
+        return stringGetter({
+          key: STRING_KEYS.AMOUNT_MINIMUM_ERROR,
+          params: {
+            NUMBER: MIN_CCTP_TRANSFER_AMOUNT,
+            TOKEN: usdcLabel,
+          },
+        });
       }
       if (MustBigNumber(debouncedAmountBN).gte(MAX_CCTP_TRANSFER_AMOUNT)) {
         return stringGetter({
@@ -453,9 +456,14 @@ export const DepositForm = ({ onDeposit, onError }: DepositFormProps) => {
               label={stringGetter({ key: STRING_KEYS.AMOUNT })}
               value={fromAmount}
               slotRight={
-                <$FormInputButton size={ButtonSize.XSmall} onClick={onClickMax}>
-                  {stringGetter({ key: STRING_KEYS.MAX })}
-                </$FormInputButton>
+                <FormMaxInputToggleButton
+                  size={ButtonSize.XSmall}
+                  isInputEmpty={fromAmount === ''}
+                  isLoading={isLoading}
+                  onPressedChange={(isPressed: boolean) =>
+                    isPressed ? onClickMax() : setFromAmount('')
+                  }
+                />
               }
             />
           </$WithDetailsReceipt>
@@ -497,8 +505,4 @@ const $Footer = styled.footer`
 
 const $WithDetailsReceipt = styled(WithDetailsReceipt)`
   --withReceipt-backgroundColor: var(--color-layer-2);
-`;
-
-const $FormInputButton = styled(Button)`
-  ${formMixins.inputInnerButton}
 `;

@@ -4,6 +4,7 @@ import styled from 'styled-components';
 
 import {
   AddressConnectorIcon,
+  AppleIcon,
   ArrowIcon,
   Bar3Icon,
   BellIcon,
@@ -37,6 +38,7 @@ import {
   FundingChartIcon,
   GearIcon,
   GiftboxIcon,
+  GooglePlayIcon,
   GovernanceIcon,
   HelpCircleIcon,
   HideIcon,
@@ -89,6 +91,7 @@ import {
 
 export enum IconName {
   AddressConnector = 'AddressConnector',
+  Apple = 'Apple',
   Arrow = 'Arrow',
   Bar3 = 'Bar3',
   Bell = 'Bell',
@@ -114,6 +117,7 @@ export enum IconName {
   Deposit = 'Deposit',
   DepthChart = 'DepthChart',
   Discord = 'Discord',
+  Download = 'Download',
   Etherscan = 'Etherscan',
   ExportKeys = 'ExportKeys',
   Feedback = 'Feedback',
@@ -121,6 +125,7 @@ export enum IconName {
   FundingChart = 'FundingChart',
   Gear = 'Gear',
   Giftbox = 'Giftbox',
+  GooglePlay = 'GooglePlay',
   Governance = 'Governance',
   HelpCircle = 'HelpCircle',
   Hide = 'Hide',
@@ -169,12 +174,12 @@ export enum IconName {
   Website = 'Website',
   Whitepaper = 'Whitepaper',
   Withdraw = 'Withdraw',
-  Download = 'Download',
   SocialX = 'SocialX',
 }
 
 const icons = {
   [IconName.AddressConnector]: AddressConnectorIcon,
+  [IconName.Apple]: AppleIcon,
   [IconName.Arrow]: ArrowIcon,
   [IconName.Bar3]: Bar3Icon,
   [IconName.Bell]: BellIcon,
@@ -200,6 +205,7 @@ const icons = {
   [IconName.Deposit]: DepositIcon,
   [IconName.DepthChart]: DepthChartIcon,
   [IconName.Discord]: DiscordIcon,
+  [IconName.Download]: DownloadIcon,
   [IconName.Etherscan]: EtherscanIcon,
   [IconName.ExportKeys]: ExportKeysIcon,
   [IconName.Feedback]: FeedbackIcon,
@@ -207,6 +213,7 @@ const icons = {
   [IconName.FundingChart]: FundingChartIcon,
   [IconName.Gear]: GearIcon,
   [IconName.Giftbox]: GiftboxIcon,
+  [IconName.GooglePlay]: GooglePlayIcon,
   [IconName.Governance]: GovernanceIcon,
   [IconName.HelpCircle]: HelpCircleIcon,
   [IconName.Hide]: HideIcon,
@@ -254,7 +261,6 @@ const icons = {
   [IconName.Website]: WebsiteIcon,
   [IconName.Whitepaper]: WhitepaperIcon,
   [IconName.Withdraw]: WithdrawIcon,
-  [IconName.Download]: DownloadIcon,
   [IconName.SocialX]: SocialXIcon,
 } as Record<IconName, ElementType>;
 

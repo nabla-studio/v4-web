@@ -1,6 +1,6 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 
-import { shallowEqual, useSelector } from 'react-redux';
+import { shallowEqual } from 'react-redux';
 import styled from 'styled-components';
 
 import { SubaccountPendingPosition } from '@/constants/abacus';
@@ -11,10 +11,12 @@ import { useStringGetter } from '@/hooks/useStringGetter';
 import { layoutMixins } from '@/styles/layoutMixins';
 
 import { Button } from '@/components/Button';
-import { Icon, IconName } from '@/components/Icon';
+import { DropdownIcon } from '@/components/DropdownIcon';
+import { IconName } from '@/components/Icon';
 import { PotentialPositionCard } from '@/components/PotentialPositionCard';
 
-import { getNonZeroPendingPositions } from '@/state/accountSelectors';
+import { getExistingOpenPositions, getNonZeroPendingPositions } from '@/state/accountSelectors';
+import { useAppSelector } from '@/state/appTypes';
 import { getAssets } from '@/state/assetsSelectors';
 
 type UnopenedIsolatedPositionsProps = {
@@ -26,18 +28,25 @@ export const MaybeUnopenedIsolatedPositionsDrawer = ({
   className,
   onViewOrders,
 }: UnopenedIsolatedPositionsProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const numNormalPositions = useAppSelector(getExistingOpenPositions, shallowEqual)?.length;
+  const [isOpen, setIsOpen] = useState(numNormalPositions === 0);
+  useEffect(() => {
+    if (numNormalPositions === 0) {
+      setIsOpen(true);
+    }
+  }, [numNormalPositions]);
 
-  const pendingPositions = useSelector(getNonZeroPendingPositions, shallowEqual);
+  const pendingPositions = useAppSelector(getNonZeroPendingPositions, shallowEqual);
+
   const stringGetter = useStringGetter();
 
   if (!pendingPositions?.length) return null;
 
   return (
     <$UnopenedIsolatedPositionsDrawerContainer className={className} isOpen={isOpen}>
-      <$Button isOpen={isOpen} onClick={() => setIsOpen(!isOpen)}>
+      <$Button onClick={() => setIsOpen(!isOpen)}>
         {stringGetter({ key: STRING_KEYS.UNOPENED_ISOLATED_POSITIONS })}
-        <Icon iconName={IconName.Caret} />
+        <DropdownIcon iconName={IconName.Caret} isOpen={isOpen} />
       </$Button>
 
       {isOpen && (
@@ -62,7 +71,7 @@ export const MaybeUnopenedIsolatedPositionsPanel = ({
   header,
   className,
 }: UnopenedIsolatedPositionsPanelProps) => {
-  const pendingPositions = useSelector(getNonZeroPendingPositions, shallowEqual);
+  const pendingPositions = useAppSelector(getNonZeroPendingPositions, shallowEqual);
   if (!pendingPositions?.length) return null;
 
   return (
@@ -85,7 +94,7 @@ const UnopenedIsolatedPositionsCards = ({
   onViewOrders,
   pendingPositions,
 }: UnopenedIsolatedPositionsCardsProps) => {
-  const assetsData = useSelector(getAssets, shallowEqual);
+  const assetsData = useAppSelector(getAssets, shallowEqual);
   return (
     <$Cards>
       {pendingPositions.map((pendingPosition) => (
@@ -105,7 +114,7 @@ const $UnopenedIsolatedPositionsDrawerContainer = styled.div<{ isOpen?: boolean 
   border-top: var(--border);
   ${({ isOpen }) => isOpen && 'height: 100%;'}
 `;
-const $Button = styled(Button)<{ isOpen?: boolean }>`
+const $Button = styled(Button)`
   position: sticky;
   top: 0;
   gap: 1rem;
@@ -113,14 +122,6 @@ const $Button = styled(Button)<{ isOpen?: boolean }>`
   background-color: transparent;
   border: none;
   margin: 0 1rem;
-
-  ${({ isOpen }) =>
-    isOpen &&
-    `
-      svg {
-        transform: rotate(180deg);
-      }
-    `}
 `;
 const $Cards = styled.div`
   ${layoutMixins.flexWrap}

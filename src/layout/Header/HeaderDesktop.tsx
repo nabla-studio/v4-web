@@ -9,6 +9,7 @@ import { STRING_KEYS } from '@/constants/localization';
 import { AppRoute } from '@/constants/routes';
 
 import { useComplianceState } from '@/hooks/useComplianceState';
+import { useEnvFeatures } from '@/hooks/useEnvFeatures';
 import { useStringGetter } from '@/hooks/useStringGetter';
 import { useTokenConfigs } from '@/hooks/useTokenConfigs';
 import { useURLConfigs } from '@/hooks/useURLConfigs';
@@ -22,6 +23,7 @@ import { Icon, IconName } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
 import { NavigationMenu } from '@/components/NavigationMenu';
 import { VerticalSeparator } from '@/components/Separator';
+import { MobileDownloadLinks } from '@/views/MobileDownloadLinks';
 import { AccountMenu } from '@/views/menus/AccountMenu';
 import { LanguageSelector } from '@/views/menus/LanguageSelector';
 import { NetworkSelectMenu } from '@/views/menus/NetworkSelectMenu';
@@ -31,18 +33,16 @@ import { useAppDispatch, useAppSelector } from '@/state/appTypes';
 import { getHasSeenLaunchIncentives } from '@/state/configsSelectors';
 import { openDialog } from '@/state/dialogs';
 
-import { testFlags } from '@/lib/testFlags';
-
 export const HeaderDesktop = () => {
   const stringGetter = useStringGetter();
+  const { isStakingEnabled } = useEnvFeatures();
   const { documentation, community, mintscanBase, exchangeStats } = useURLConfigs();
   const dispatch = useAppDispatch();
   const { chainTokenLabel } = useTokenConfigs();
   const { complianceState } = useComplianceState();
 
   const hasSeenLaunchIncentives = useAppSelector(getHasSeenLaunchIncentives);
-  const showChainTokenPage =
-    complianceState === ComplianceStates.FULL_ACCESS || testFlags.enableStaking;
+  const showChainTokenPage = complianceState === ComplianceStates.FULL_ACCESS || isStakingEnabled;
 
   const navItems = [
     {
@@ -108,7 +108,7 @@ export const HeaderDesktop = () => {
               slotBefore: <Icon iconName={IconName.HelpCircle} />,
               label: stringGetter({ key: STRING_KEYS.HELP }),
               onClick: () => {
-                dispatch(openDialog({ type: DialogTypes.Help }));
+                dispatch(openDialog(DialogTypes.Help()));
               },
             },
             {
@@ -144,10 +144,12 @@ export const HeaderDesktop = () => {
       <div role="separator" />
 
       <$NavAfter>
+        <MobileDownloadLinks />
+
         <$IconButton
           shape={ButtonShape.Rectangle}
           iconName={IconName.HelpCircle}
-          onClick={() => dispatch(openDialog({ type: DialogTypes.Help }))}
+          onClick={() => dispatch(openDialog(DialogTypes.Help()))}
         />
 
         <VerticalSeparator />
@@ -241,7 +243,7 @@ const $LogoLink = styled(Link)`
 const $NavAfter = styled.div`
   ${layoutMixins.row}
   justify-self: end;
-  padding-right: 0.75rem;
+  padding: 0 0.75rem;
 
   gap: 0.5rem;
 

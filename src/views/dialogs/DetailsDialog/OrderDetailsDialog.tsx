@@ -9,6 +9,7 @@ import {
   type Nullable,
 } from '@/constants/abacus';
 import { ButtonAction } from '@/constants/buttons';
+import { DialogProps, OrderDetailsDialogProps } from '@/constants/dialogs';
 import { STRING_KEYS, type StringKey } from '@/constants/localization';
 import { isMainnet } from '@/constants/networks';
 import { CancelOrderStatuses } from '@/constants/trade';
@@ -37,12 +38,10 @@ import { MustBigNumber } from '@/lib/numbers';
 import { isMarketOrderType, isOrderStatusClearable, relativeTimeString } from '@/lib/orders';
 import { getMarginModeFromSubaccountNumber } from '@/lib/tradeData';
 
-type ElementProps = {
-  orderId: string;
-  setIsOpen: (open: boolean) => void;
-};
-
-export const OrderDetailsDialog = ({ orderId, setIsOpen }: ElementProps) => {
+export const OrderDetailsDialog = ({
+  orderId,
+  setIsOpen,
+}: DialogProps<OrderDetailsDialogProps>) => {
   const stringGetter = useStringGetter();
   const dispatch = useAppDispatch();
   const selectedLocale = useAppSelector(getSelectedLocale);
@@ -214,7 +213,11 @@ export const OrderDetailsDialog = ({ orderId, setIsOpen }: ElementProps) => {
   };
 
   const isShortTermOrder = orderFlags === OrderFlags.SHORT_TERM;
-  const isBestEffortCanceled = status === AbacusOrderStatus.Canceling;
+  // we update short term orders to pending status when they are best effort canceled in Abacus
+  const isBestEffortCanceled =
+    (status === AbacusOrderStatus.Pending && cancelReason != null) ||
+    status === AbacusOrderStatus.Canceling;
+
   const isCancelDisabled = !!isOrderCanceling || (isShortTermOrder && isBestEffortCanceled);
 
   return (
